@@ -1,10 +1,16 @@
 CXX := g++
-CXXFLAGS := -std=c++17
+CXXFLAGS := -std=c++17 -Wall -Wextra
 
-all: main
+LIB_NAME = liblogger.so
+TARGET = main
 
-main: main.cpp
-	$(CXX) $(CXXFLAGS) main.cpp -o main
+all: $(TARGET)
+
+$(LIB_NAME): Logger.cpp Logger.h
+	$(CXX) $(CXXFLAGS) -fPIC -shared Logger.cpp -o $(LIB_NAME)
+
+$(TARGET): main.cpp $(LIB_NAME)
+	$(CXX) $(CXXFLAGS) main.cpp -L. -llogger -Wl,-rpath,. -o $(TARGET)
 
 clean:
-	rm -f main
+	rm -f $(TARGET) $(LIB_NAME)
