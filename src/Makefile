@@ -3,6 +3,7 @@ CXXFLAGS := -std=c++17 -Wall -Wextra
 
 LIB_NAME = liblogger.so
 TARGET = main
+TRASH = output.txt
 
 all: $(TARGET)
 
@@ -13,4 +14,4 @@ $(TARGET): main.cpp $(LIB_NAME)
 	$(CXX) $(CXXFLAGS) main.cpp -L. -llogger -Wl,-rpath,. -o $(TARGET)
 
 clean:
-	rm -f $(TARGET) $(LIB_NAME)
+	rm -f $(TARGET) $(LIB_NAME) $(TRASH)

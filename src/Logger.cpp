@@ -1,16 +1,24 @@
 #include "Logger.h"
 #include <iostream>
+#include <stdexcept>
 
 
 std::string logLevelToString(LogLevel logLevel) {
     switch (logLevel) {
-        case LogLevel::INFO: return "INFO";
-        case LogLevel::WARNING: return "WARNING";
-        case LogLevel::ERROR: return "ERROR";
-        default: return "UNKNOWN";
+        case LogLevel::INFO:        return "INFO";
+        case LogLevel::WARNING:     return "WARNING";
+        case LogLevel::ERROR:       return "ERROR";
+        default:                    return "UNKNOWN";
     }
 }
 
+LogLevel stringToLogLevel(std::string_view logLevel) {
+    if (logLevel == "INFO")                             return LogLevel::INFO;
+    if (logLevel == "WARNING" || logLevel == "WARN")    return LogLevel::WARNING;
+    if (logLevel == "ERROR" || logLevel == "ERR")       return LogLevel::ERROR;
+    
+    throw std::invalid_argument("Неизвестный уровень логирования: " + std::string(logLevel));
+}
 
 FileLogger::FileLogger(const std::string& filename, LogLevel logLevel)
     : file(filename, std::ios::out | std::ios::app),

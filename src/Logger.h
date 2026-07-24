@@ -3,6 +3,7 @@
 #include <fstream>
 #include <chrono>
 #include <iomanip>
+#include <string_view>
 
 
 enum class LogLevel : int {
@@ -13,6 +14,7 @@ enum class LogLevel : int {
 
 
 std::string logLevelToString(LogLevel logLevel);
+LogLevel stringToLogLevel(std::string_view logLevel);
 
 
 class FileLogger {
