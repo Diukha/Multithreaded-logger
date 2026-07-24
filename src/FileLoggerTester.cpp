@@ -1,0 +1,123 @@
+#include "FileLoggerTester.h"
+
+FileLoggerTester::FileLoggerTester(FileLogger& fl): fileLogger(fl) {
+    finishLogging = false;
+}
+
+void FileLoggerTester::run() {
+    std::thread fileLoggerThread(&FileLoggerTester::logMessagesWorker, this);
+
+    while (processUserInput())
+        continue;
+
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        finishLogging = true;
+    }
+
+    conditionVariable.notify_one();
+    fileLoggerThread.join();
+}
+
+std::string FileLoggerTester::getUserInput() {
+    std::string userInput = "";
+    if (std::getline(std::cin, userInput))
+        return userInput;
+
+    throw std::runtime_error("Ошибка ввода с std::cin");
+}
+
+bool FileLoggerTester::getLogLevelFromUserInput(LogLevel& logLevel) {
+    std::string userInput = "";
+
+    while (true) {
+        std::cout << "\nВведите уровень важности сообщения: ";
+
+        try {
+            userInput = getUserInput();
+
+            if (userInput.empty())
+                logLevel = fileLogger.getDefaultLogLevel();
+            else
+                logLevel = stringToLogLevel(userInput);
+
+            std::cout << "Вы ввели: " << logLevelToString(logLevel);
+
+            break;
+        } catch (const std::runtime_error& err) {
+            std::cout << "Произошла ошибка ввода\n";
+            return false;
+        } catch (const std::invalid_argument& err) {
+            std::cout << "Введён несуществующий уровень логирования: "
+                      << userInput
+                      << "\n";
+            continue;
+        }
+    }
+
+    return true;
+}
+
+bool FileLoggerTester::getMessageTextFromUserInput(std::string& messageText) {
+    std::cout << "\nВведите сообщение: ";
+
+    try {
+        std::string userInput = getUserInput();
+
+        if (userInput.empty()) return false;
+
+        messageText = userInput;
+
+        std::cout << "Вы ввели: " << userInput << "\n";
+    } catch (const std::runtime_error& err) {
+        std::cout << "Произошла ошибка ввода\n";
+        return false;
+    }
+
+    return true;
+}
+
+bool FileLoggerTester::processUserInput() {
+    std::string messageText;
+    LogLevel currentLogLevel;
+
+
+    if (!getLogLevelFromUserInput(currentLogLevel))
+        return false;
+
+
+    if (!getMessageTextFromUserInput(messageText))
+        return false;
+
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        logMessagesQueue.push({messageText, currentLogLevel});
+    }
+
+    conditionVariable.notify_one();
+
+    return true;
+}
+
+void FileLoggerTester::logMessagesWorker() {
+    while (true) {
+        LogMessage logMessage;
+
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            conditionVariable.wait(
+                    lock, 
+                    [this] {
+                        return !logMessagesQueue.empty() || finishLogging;
+                    });
+
+            if (finishLogging && logMessagesQueue.empty())
+                break;
+
+            logMessage = logMessagesQueue.front();
+            logMessagesQueue.pop();
+        }
+        
+        fileLogger.log(logMessage.text, logMessage.logLevel);
+    }
+}
