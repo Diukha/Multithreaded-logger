@@ -2,9 +2,53 @@
 #include "Logger.h"
 #include <string_view>
 
+#include <queue>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
 
 std::string filename = "";
 LogLevel defaultLogLevel = LogLevel::INFO;
+
+
+
+
+struct LogMessage {
+    std::string text;
+    LogLevel logLevel;
+};
+
+std::queue<LogMessage> logMessagesQueue;
+std::mutex mutex;
+std::condition_variable conditionVariable;
+bool finishLogging = false;
+
+void messagesWorker(FileLogger& fileLogger) {
+    while (true) {
+        LogMessage logMessage;
+
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            conditionVariable.wait(
+                    lock, 
+                    [] {
+                        return !logMessagesQueue.empty() || finishLogging;
+                    });
+
+            if (finishLogging && logMessagesQueue.empty())
+                break;
+
+            logMessage = logMessagesQueue.front();
+            logMessagesQueue.pop();
+        }
+        
+        fileLogger.log(logMessage.text, logMessage.logLevel);
+    }
+}
+
+
+
 
 
 void printHelp() {
@@ -25,7 +69,7 @@ bool parseArgs(int argc, char* argv[]) {
         return false;
     }
 
-    for (int i = 0; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
         std::string_view arg = argv[i];
 
         if (arg == "-h" || arg == "--help") {
@@ -57,6 +101,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Уровень сообщений по умолчанию: " << logLevelToString(defaultLogLevel) << "\n";
 
     FileLogger fileLogger = FileLogger(filename, defaultLogLevel);
+    std::thread fileLoggerThread(messagesWorker, std::ref(fileLogger));
 
     LogLevel currentLogLevel = LogLevel::INFO;
 
@@ -91,12 +136,25 @@ int main(int argc, char* argv[]) {
             if (userInput.empty()) break;
 
             std::cout << "Вы ввели: " << userInput << "\n";
-            fileLogger.log(userInput, currentLogLevel);
+
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                logMessagesQueue.push({userInput, currentLogLevel});
+            }
+            conditionVariable.notify_one();
+
         } catch (const std::runtime_error& err) {
             std::cout << "Произошла ошибка ввода\n";
             break;
         }
     }
+
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        finishLogging = true;
+    }
+    conditionVariable.notify_one();
+    fileLoggerThread.join();
 
     return 0;
 }
