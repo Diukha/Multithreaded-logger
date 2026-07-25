@@ -4,13 +4,13 @@
 
 
 std::string logLevelToString(LogLevel logLevel) {
-    switch (logLevel) {
-        case LogLevel::INFO:        return "INFO";
-        case LogLevel::WARNING:     return "WARNING";
-        case LogLevel::ERROR:       return "ERROR";
-        default:                    return "UNKNOWN";
-    }
+    if (logLevel == LogLevel::INFO)     return "INFO";
+    if (logLevel == LogLevel::WARNING)  return "WARNING";
+    if (logLevel == LogLevel::ERROR)    return "ERROR";
+    
+    throw std::invalid_argument("Неизвестный уровень логирования");
 }
+
 
 LogLevel stringToLogLevel(std::string_view logLevel) {
     if (logLevel == "INFO")                             return LogLevel::INFO;
@@ -20,12 +20,13 @@ LogLevel stringToLogLevel(std::string_view logLevel) {
     throw std::invalid_argument("Неизвестный уровень логирования: " + std::string(logLevel));
 }
 
-FileLogger::FileLogger(const std::string& filename, LogLevel logLevel)
-    : file(filename, std::ios::out | std::ios::app),
-      defaultLogLevel(logLevel)
-{
-    if (!file.is_open())
-        throw std::runtime_error("Не удалось открыть файл: " + filename);
+FileLogger::FileLogger(const std::string& filename, LogLevel logLevel): defaultLogLevel(logLevel) {
+    if (filename.empty())
+        throw std::runtime_error("Не указан файл журнала");
+
+    file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+
+    file.open(filename, std::ios::out | std::ios::app);
 }
 
 
@@ -53,6 +54,8 @@ void FileLogger::log(const std::string& message, LogLevel logLevel) {
              << "." << std::setfill('0') << std::setw(3) << milliseconds.count()
              << " [" << logLevelToString(logLevel) << "]" << "\t"
              << message << "\n";
+
+        file.flush();
     }
 }
 

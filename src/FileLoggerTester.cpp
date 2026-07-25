@@ -1,7 +1,7 @@
 #include "FileLoggerTester.h"
 
-FileLoggerTester::FileLoggerTester(FileLogger& fl): fileLogger(fl) {
-    finishLogging = false;
+FileLoggerTester::FileLoggerTester(FileLogger& _fileLogger): fileLogger(_fileLogger) {
+    isLogging = true;
 }
 
 void FileLoggerTester::run() {
@@ -12,7 +12,7 @@ void FileLoggerTester::run() {
 
     {
         std::lock_guard<std::mutex> lock(mutex);
-        finishLogging = true;
+        isLogging = false;
     }
 
     conditionVariable.notify_one();
@@ -108,16 +108,22 @@ void FileLoggerTester::logMessagesWorker() {
             conditionVariable.wait(
                     lock, 
                     [this] {
-                        return !logMessagesQueue.empty() || finishLogging;
+                        return !logMessagesQueue.empty() || !isLogging;
                     });
 
-            if (finishLogging && logMessagesQueue.empty())
+            if (!isLogging && logMessagesQueue.empty())
                 break;
 
             logMessage = logMessagesQueue.front();
             logMessagesQueue.pop();
         }
         
-        fileLogger.log(logMessage.text, logMessage.logLevel);
+        try {
+            fileLogger.log(logMessage.text, logMessage.logLevel);
+        } catch (const std::ios_base::failure& e) {
+            std::cerr << "\nНе удалось записать в журнал: " << e.what() << "\n";
+        } catch (const std::exception& e) {
+            std::cerr << "\nНе удалось записать в журнал: " << e.what() << "\n";
+        }
     }
 }

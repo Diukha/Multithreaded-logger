@@ -2,3 +2,5 @@
 output.txt
 main
 liblogger.so
+tests_runner
+test_output.txt

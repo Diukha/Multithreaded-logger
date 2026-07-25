@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iomanip>
 #include <string_view>
+#include <atomic>
 
 
 enum class LogLevel : int {
@@ -27,5 +28,5 @@ class FileLogger {
 
     private:
         std::ofstream file;
-        LogLevel defaultLogLevel;
+        std::atomic<LogLevel> defaultLogLevel;
 };

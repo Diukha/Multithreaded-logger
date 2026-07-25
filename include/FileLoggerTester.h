@@ -17,7 +17,7 @@ struct LogMessage {
 
 class FileLoggerTester {
     public:
-        FileLoggerTester(FileLogger& fl);
+        FileLoggerTester(FileLogger& _fileLogger);
 
         void run();
 
@@ -29,7 +29,7 @@ class FileLoggerTester {
         std::queue<LogMessage> logMessagesQueue;
         std::mutex mutex;
         std::condition_variable conditionVariable;
-        bool finishLogging;
+        bool isLogging;
 
 
         std::string getUserInput();

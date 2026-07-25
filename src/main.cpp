@@ -42,12 +42,12 @@ bool parseArgs(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-    if (!parseArgs(argc, argv)) return 1;
-    
-    std::cout << "Файл журнала: " << filename << "\n";
-    std::cout << "Уровень сообщений по умолчанию: " << logLevelToString(defaultLogLevel) << "\n";
-
     try {
+        if (!parseArgs(argc, argv)) return 1;
+        
+        std::cout << "Файл журнала: " << filename << "\n";
+        std::cout << "Уровень сообщений по умолчанию: " << logLevelToString(defaultLogLevel) << "\n";
+
         FileLogger fileLogger(filename, defaultLogLevel);
         
         FileLoggerTester tester(fileLogger);
