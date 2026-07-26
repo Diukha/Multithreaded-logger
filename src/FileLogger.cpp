@@ -29,6 +29,7 @@ FileLogger::FileLogger(const std::string& fileName, LogLevel defaultLogLevel)
     if (fileName.empty())
         throw std::runtime_error("Не указан файл журнала.");
 
+    // Включает сообщения об ошибках с файлом.
     logFile_.exceptions(std::ofstream::failbit | std::ofstream::badbit);
 
     logFile_.open(fileName, std::ios::out | std::ios::app);

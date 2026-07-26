@@ -107,7 +107,6 @@ bool FileLoggerDemo::processUserInput() {
     if (!getLogLevelFromUserInput(currentLogLevel))
         return false;
 
-
     // или при ошибке ввода текста сообщения,
     // или при вводе пустого сообщения пользователем,
     // завершает выполнение программы.

@@ -74,6 +74,8 @@ int main(int argc, char* argv[]) {
         std::cout << "Чтобы выйти из приложения, пропустите ввод сообщения (нажмите Enter)\n";
         
         FileLoggerDemo fileLoggerDemo(fileLogger);
+
+        // Запуск демонстрации работы библиотеки с пользовательским вводом.
         fileLoggerDemo.run();
 
     } catch (const std::ios_base::failure& e) {
