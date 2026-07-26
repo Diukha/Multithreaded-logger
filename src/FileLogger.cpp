@@ -20,6 +20,7 @@ LogLevel stringToLogLevel(std::string_view logLevel) {
     throw std::invalid_argument("Неизвестный уровень логирования: " + std::string(logLevel));
 }
 
+
 FileLogger::FileLogger(const std::string& filename, LogLevel logLevel): defaultLogLevel(logLevel) {
     if (filename.empty())
         throw std::runtime_error("Не указан файл журнала");
@@ -44,7 +45,8 @@ void FileLogger::log(const std::string& message, LogLevel logLevel) {
     if (logLevel >= defaultLogLevel) {
         auto now = std::chrono::system_clock::now();
         std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-        std::tm localTime = *std::localtime(&currentTime);
+        std::tm localTime;
+        localtime_r(&currentTime, &localTime);
 
         auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
             now.time_since_epoch()

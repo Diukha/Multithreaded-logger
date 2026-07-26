@@ -1,8 +1,10 @@
 #include "FileLoggerTester.h"
 
+
 FileLoggerTester::FileLoggerTester(FileLogger& _fileLogger): fileLogger(_fileLogger) {
     isLogging = true;
 }
+
 
 void FileLoggerTester::run() {
     std::thread fileLoggerThread(&FileLoggerTester::logMessagesWorker, this);
@@ -24,8 +26,9 @@ std::string FileLoggerTester::getUserInput() {
     if (std::getline(std::cin, userInput))
         return userInput;
 
-    throw std::runtime_error("Ошибка ввода с std::cin");
+    throw std::runtime_error("\nОшибка ввода с std::cin\n");
 }
+
 
 bool FileLoggerTester::getLogLevelFromUserInput(LogLevel& logLevel) {
     std::string userInput = "";
@@ -41,14 +44,14 @@ bool FileLoggerTester::getLogLevelFromUserInput(LogLevel& logLevel) {
             else
                 logLevel = stringToLogLevel(userInput);
 
-            std::cout << "Вы ввели: " << logLevelToString(logLevel);
+            std::cout << "Вы ввели: " << logLevelToString(logLevel) << "\n";
 
             break;
         } catch (const std::runtime_error& err) {
-            std::cout << "Произошла ошибка ввода\n";
+            std::cerr << "Произошла ошибка ввода\n";
             return false;
         } catch (const std::invalid_argument& err) {
-            std::cout << "Введён несуществующий уровень логирования: "
+            std::cerr << "Введён несуществующий уровень логирования: "
                       << userInput
                       << "\n";
             continue;
@@ -57,6 +60,7 @@ bool FileLoggerTester::getLogLevelFromUserInput(LogLevel& logLevel) {
 
     return true;
 }
+
 
 bool FileLoggerTester::getMessageTextFromUserInput(std::string& messageText) {
     std::cout << "\nВведите сообщение: ";
@@ -69,13 +73,15 @@ bool FileLoggerTester::getMessageTextFromUserInput(std::string& messageText) {
         messageText = userInput;
 
         std::cout << "Вы ввели: " << userInput << "\n";
+
     } catch (const std::runtime_error& err) {
-        std::cout << "Произошла ошибка ввода\n";
+        std::cerr << "Произошла ошибка ввода\n";
         return false;
     }
 
     return true;
 }
+
 
 bool FileLoggerTester::processUserInput() {
     std::string messageText;
@@ -99,6 +105,7 @@ bool FileLoggerTester::processUserInput() {
     return true;
 }
 
+
 void FileLoggerTester::logMessagesWorker() {
     while (true) {
         LogMessage logMessage;
@@ -121,9 +128,29 @@ void FileLoggerTester::logMessagesWorker() {
         try {
             fileLogger.log(logMessage.text, logMessage.logLevel);
         } catch (const std::ios_base::failure& e) {
-            std::cerr << "\nНе удалось записать в журнал: " << e.what() << "\n";
+            int systemErrno = errno;
+            std::cerr << "\nОшибка: не удалось записать сообщение в журнал\n";
+
+            switch (systemErrno) {
+                case ENOSPC:
+                    std::cerr << "Причина: недостаточно места на диске\n";
+                    break;
+                case EACCES:
+                case EPERM:
+                    std::cerr << "Причина: отказано в доступе к файлу журнала\n";
+                    break;
+                case EIO:
+                    std::cerr << "Причина: аппаратный сбой ввода-вывода\n";
+                    break;
+                case EFBIG:
+                    std::cerr << "Причина: файл журнала превысил допустимый размер\n";
+                    break;
+                default:
+                    std::cerr << "Причина: неизвестная ошибка " << systemErrno << "\n";
+                    break;
+            }
         } catch (const std::exception& e) {
-            std::cerr << "\nНе удалось записать в журнал: " << e.what() << "\n";
+            std::cerr << "\nПроизошла критическая ошибка: " << e.what() << "\n";
         }
     }
 }

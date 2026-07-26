@@ -15,15 +15,20 @@ enum class LogLevel : int {
 
 
 std::string logLevelToString(LogLevel logLevel);
+
 LogLevel stringToLogLevel(std::string_view logLevel);
 
 
 class FileLogger {
     public:
         FileLogger(const std::string& filename, LogLevel logLevel);
+
         void setDefaultLogLevel(LogLevel logLevel);
+
         LogLevel getDefaultLogLevel() const;
+
         void log(const std::string& message, LogLevel logLevel);
+
         ~FileLogger();
 
     private:
