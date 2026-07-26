@@ -3,14 +3,13 @@ CXXFLAGS := -std=c++17 -Wall -Wextra -Iinclude
 
 SRC_DIR := src
 INC_DIR := include
-APP_SRCS := $(SRC_DIR)/FileLoggerTester.cpp $(SRC_DIR)/main.cpp
+APP_SRCS := $(SRC_DIR)/FileLoggerDemo.cpp $(SRC_DIR)/main.cpp
 
 TESTS_SRCS := $(SRC_DIR)/tests/tests.cpp
 TESTS_TARGET := tests_runner
-TRASH := output.txt
 
 LIB_NAME := liblogger.so
-TARGET := main
+TARGET := app
 
 all: $(TARGET)
 
@@ -30,6 +29,6 @@ tests: $(TESTS_TARGET)
 	./$(TESTS_TARGET)
 
 clean:
-	rm -f $(TARGET) $(LIB_NAME) $(TESTS_TARGET) $(TRASH)
+	rm -f $(TARGET) $(LIB_NAME) $(TESTS_TARGET)
 
 .PHONY: all clean tests

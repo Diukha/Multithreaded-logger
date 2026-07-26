@@ -9,9 +9,11 @@
 void testGetDefaultLogLevel() {
     std::cout << "\nЗАПУСК теста получения уровня важности по умолчанию\n";
 
+    // На всякий случай удаляет временный файл перед тестом.
     std::string testFile = "test_output.txt";
     std::filesystem::remove(testFile);
 
+    // Инициализация с уровнем важности WARNING по умолчанию.
     FileLogger fileLogger(testFile, LogLevel::WARNING);
 
     assert(
@@ -30,6 +32,8 @@ void testSetDefaultLogLevel() {
     std::filesystem::remove(testFile);
 
     FileLogger fileLogger(testFile, LogLevel::WARNING);
+
+    // Попытка поменять уровень важности после инициализации библиотеки.
     fileLogger.setDefaultLogLevel(LogLevel::ERROR);
 
     assert(
@@ -41,6 +45,7 @@ void testSetDefaultLogLevel() {
 }
 
 
+// Вспомогательная функция для чтения содержимого файла.
 std::string readFileContent(std::string filename) {
     std::ifstream file(filename);
 
@@ -59,7 +64,7 @@ void testLog() {
     std::string testFile = "test_output.txt";
     std::filesystem::remove(testFile);
 
-    {
+    { // убеждаемся, что деструктор сработал - файл закрыт, изменения записаны
         FileLogger fileLogger(testFile, LogLevel::INFO);
         fileLogger.log("hello world!", LogLevel::INFO);
     }
@@ -89,7 +94,7 @@ void testLogFiltering() {
 
     {
         FileLogger fileLogger(testFile, LogLevel::WARNING);
-        fileLogger.log("hello world!", LogLevel::INFO);
+        fileLogger.log("hello world!", LogLevel::INFO); // не должно записаться
         fileLogger.log("hello again!", LogLevel::WARNING);
         fileLogger.log("and again!", LogLevel::ERROR);
     }
@@ -155,7 +160,7 @@ void testStringToLogLevel() {
 void testExceptions() {
     std::cout << "\nЗАПУСК теста на исключения\n";
 
-    // Проверка на пустое имя файла журнала
+    // -------- Проверка на пустое имя файла журнала
     bool caughtEmptyFile = false;
 
     try {
@@ -168,8 +173,10 @@ void testExceptions() {
         caughtEmptyFile
         && "ОШИБКА: не выброшено исключение для пустого имени файла журнала"
     );
+    // ---------------------------------------------
 
-    // Проверка с несуществующей строкой уровня логирования
+
+    // -------- Проверка с несуществующей строкой уровня логирования
     bool caughtInvalidLogLevelString = false;
 
     try {
@@ -182,8 +189,10 @@ void testExceptions() {
         caughtInvalidLogLevelString
         && "ОШИБКА: не выброшено исключение для неверной строки уровня логирования"
     );
+    // ------------------------------------------------------------
 
-    // Проверка с неизвестным уровнем логирования
+
+    // -------- Проверка с неизвестным уровнем логирования
     bool caughtInvalidLogLevel = false;
 
     try {
@@ -196,8 +205,10 @@ void testExceptions() {
         caughtInvalidLogLevel
         && "ОШИБКА: не выброшено исключение для неизвестного enum"
     );
+    // --------------------------------------------------
 
-    // Проверка открытия файла в несуществующей директории
+
+    // -------- Проверка открытия файла в несуществующей директории
     bool caughtFileOpenError = false;
 
     try {
@@ -210,6 +221,7 @@ void testExceptions() {
         caughtFileOpenError
         && "ОШИБКА: не выброшено исключение при ошибке открытия файла"
     );
+    // ------------------------------------------------------------
 
     std::cout << "УСПЕХ теста на исключения\n";
 }
@@ -222,7 +234,7 @@ void testEmptyMessage() {
 
     {
         FileLogger fileLogger(testFile, LogLevel::INFO);
-        fileLogger.log("", LogLevel::INFO);
+        fileLogger.log("", LogLevel::INFO); // запись пустого сообщения
     }
 
     std::string fileContent = readFileContent(testFile);

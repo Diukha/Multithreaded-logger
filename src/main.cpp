@@ -1,11 +1,10 @@
 #include <iostream>
 #include <string_view>
-#include "FileLogger.h"
-#include "FileLoggerTester.h"
+#include "FileLoggerDemo.h"
 #include <cerrno>
-#include <system_error>
 
 
+// Для инициализации библиотеки.
 std::string filename = "";
 LogLevel defaultLogLevel = LogLevel::INFO;
 
@@ -16,19 +15,19 @@ void printHelp() {
         << "Использование: app [ОПЦИЯ] [ЗНАЧЕНИЕ]\n"
         << "Пример использования: app -o output.txt -l ERROR\n"
         << "Доступные опции:\n"
-        << "  -o, --output FILE       используется для указания файла журнала\n"
-        << "  -l, --log-level LEVEL   используется для указания уровня важности сообщения по умолчанию\n"
-        << "  -h, --help              показать эту подсказку\n";
+        << "  -o, --output PATH/TO/FILE     используется для указания файла журнала\n"
+        << "  -l, --log-level LEVEL         используется для указания уровня важности сообщения по умолчанию\n"
+        << "  -h, --help                    показать эту подсказку\n";
 }
 
 
 bool parseArgs(int argc, char* argv[]) {
-    if (argc == 1) {
+    if (argc == 1) { // приложение запущено без аргументов
         printHelp();
         return false;
     }
 
-    for (int i = 1; i+1 < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
         std::string_view arg = argv[i];
 
         if (arg == "-h" || arg == "--help") {
@@ -36,11 +35,25 @@ bool parseArgs(int argc, char* argv[]) {
             return false;
         }
 
-        if (arg == "-o" || arg == "--output")
-            filename = argv[++i];
+        if (arg == "-o" || arg == "--output") {
+            // следующим аргументом должно быть имя файла
+            if (i + 1 < argc) {
+                filename = argv[++i]; 
+            } else {
+                std::cerr << "Ошибка: после флага -o не указано имя файла.\n";
+                return false;
+            }
+        }
 
-        if (arg == "-l" || arg == "--log-level")
-            defaultLogLevel = stringToLogLevel(argv[++i]);
+        if (arg == "-l" || arg == "--log-level") {
+            // следующим аргументом должен быть уровень важности
+            if (i + 1 < argc) {
+                defaultLogLevel = stringToLogLevel(argv[++i]);
+            } else {
+                std::cerr << "Ошибка: после флага -l не указан уровень важности.\n";
+                return false;
+            }
+        }
     }
 
     return true;
@@ -60,8 +73,8 @@ int main(int argc, char* argv[]) {
 
         std::cout << "Чтобы выйти из приложения, пропустите ввод сообщения (нажмите Enter)\n";
         
-        FileLoggerTester fileLoggerTester(fileLogger);
-        fileLoggerTester.run();
+        FileLoggerDemo fileLoggerDemo(fileLogger);
+        fileLoggerDemo.run();
 
     } catch (const std::ios_base::failure& e) {
         int systemErrno = errno; 
