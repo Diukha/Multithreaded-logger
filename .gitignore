@@ -4,3 +4,5 @@ main
 liblogger.so
 tests_runner
 test_output.txt
+app
+out.txt

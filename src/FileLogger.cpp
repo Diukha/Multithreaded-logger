@@ -54,15 +54,14 @@ void FileLogger::log(const std::string& message, LogLevel logLevel) {
     // ---- Получение времени: часов, минут, секунд, миллисекунд.
         auto now = std::chrono::system_clock::now();
         std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-        std::tm localTime;
-        localtime_r(&currentTime, &localTime);
+        std::tm* localTime = std::localtime(&currentTime);
 
         auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
             now.time_since_epoch()
         ) % 1000;
     // ---------------------------------------------------------
 
-        logFile_ << std::put_time(&localTime, "%H:%M:%S")
+        logFile_ << std::put_time(localTime, "%H:%M:%S")
              << "."
              << std::setfill('0') // дописывает старшие нули
              << std::setw(3) // 3 символа для миллисекунд
